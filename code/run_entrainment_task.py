@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import signal_funcs as sgnl
 import trial_funcs as trl
+from collections import OrderedDict
 
 def get_current_sessions(main_dir):
     return os.listdir(main_dir)
@@ -96,12 +97,22 @@ def main():
     STIM_AMP_INTERVAL = 0.3 #need to program in a ramp rate of 0.1mA/s    
     STIM_FREQ_INTERVAL = 2
 
+    CLINICAL_FREQ = 130
+    CLINICAL_AMP = 2.0
+
 
     df_trials = pd.DataFrame(np.NaN, np.arange(0, num_trials, 1), 
                              ['stim_amp', 'stim_freq', 'entrained'])   
     df_trials.index.name = 'trial'
     
     session_dir_list = get_current_sessions(main_dir)
+
+    bottom_boundary = {}
+    top_boundary = {}
+    freq_bounds_exclusive = []
+    prev_entrained = []
+    bottom_finished = []
+    bottom_sorted = False
 
     #Calculate each trial's stim parameters throughout the taskå
     for i in range(num_trials):
@@ -117,7 +128,8 @@ def main():
 
         [timeseries, sr] = get_ts(td_filepath, channel)        
         [stim_freq, stim_amp] = get_stim_params(stim_filepath)
-        
+
+
         df_trials.loc[i, 'stim_amp'] = stim_amp
         df_trials.loc[i, 'stim_freq'] = stim_freq
          
@@ -126,7 +138,13 @@ def main():
         df_trials.loc[i, 'entrained'] = trial_entrained
         
         entrain_trial_kernel = np.NaN
-        [amp_next, freq_next, entrain_trial_kernel] = trl.get_next_trial_params(df_trials, max_amp, STIM_AMP_INTERVAL, STIM_FREQ_INTERVAL, stim_freq, entrain_trial_kernel)
+      #  [amp_next, freq_next, entrain_trial_kernel] = trl.get_next_trial_params(df_trials, max_amp, STIM_AMP_INTERVAL, STIM_FREQ_INTERVAL, stim_freq, entrain_trial_kernel)
+
+        if bottom_finished & (not bottom_sorted):
+            bottom_boundary = OrderedDict(sorted(bottom_boundary.items()))
+            bottom_sorted = True
+
+        [freq_next, amp_next] = trl.generate_next_params(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, freq_bounds_exclusive, prev_entrained, clinical_freq, bottom_finished)
 
         session_dir_list = get_current_sessions(main_dir)
 
