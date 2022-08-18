@@ -144,7 +144,7 @@ def main():
             bottom_boundary = OrderedDict(sorted(bottom_boundary.items()))
             bottom_sorted = True
 
-        [freq_next, amp_next] = trl.generate_next_params(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, freq_bounds_exclusive, prev_entrained, clinical_freq, bottom_finished)
+        [freq_next, amp_next] = trl.generate_next_params(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, freq_bounds_exclusive, prev_entrained, CLINICAL_FREQ, CLINICAL_AMP, STIM_FREQ_INTERVAL, STIM_AMP_INTERVAL, bottom_finished)
 
         session_dir_list = get_current_sessions(main_dir)
 

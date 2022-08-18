@@ -102,15 +102,15 @@ def redundant_settings(df_trials, amp_next, freq_next):
 
 
 
-def find_bottom(stim_amp, stim_freq, trial_entrained, bottom_boundary, freq_bounds_exclusive, prev_entrained, clinical_freq, bottom_finished):
+def find_bottom(stim_amp, stim_freq, trial_entrained, bottom_boundary, freq_bounds_exclusive, prev_entrained, clinical_freq, clinical_amp, bottom_finished, freq_interval, amp_interval):
     
-    freq_step = -10
+    freq_step = -freq_interval
     if len(freq_bounds_exclusive) == 1:
-        freq_step = 10
+        freq_step = freq_interval
 
     if trial_entrained:
         if prev_entrained[0] or len(prev_entrained) == 0:
-            amp_next = stim_amp - 0.1
+            amp_next = stim_amp - amp_interval
             freq_next = stim_freq
         else:
             bottom_boundary[stim_freq] = stim_amp
@@ -121,25 +121,25 @@ def find_bottom(stim_amp, stim_freq, trial_entrained, bottom_boundary, freq_boun
    
     else:
         if prev_entrained[0]:
-            bottom_boundary[stim_freq] = stim_amp + 0.1
+            bottom_boundary[stim_freq] = stim_amp + amp_interval
             freq_next = stim_freq + freq_step
-            amp_next = stim_amp + 0.1
+            amp_next = stim_amp + amp_interval
             prev_entrained[0] = False
         else:
             freq_next = stim_freq
-            amp_next = stim_amp + 0.1
+            amp_next = stim_amp + amp_interval
             
             if amp_next == 6.1:
                 freq_bounds_exclusive.append(stim_freq)
 
                 if len(freq_bounds_exclusive) == 1:
-                    amp_next = bottom_boundary[clinical_freq]
-                    freq_next = clinical_freq + 10
+                    amp_next = clinical_amp
+                    freq_next = clinical_freq + freq_interval
                     prev_entrained[0] = True
                     return [freq_next, amp_next]
                 else:
                     bottom_finished[0] = True
-                    freq_next = stim_freq-10
+                    freq_next = stim_freq - freq_interval
                     amp_next = stim_amp
                     
         prev_entrained[0] = False
@@ -147,38 +147,38 @@ def find_bottom(stim_amp, stim_freq, trial_entrained, bottom_boundary, freq_boun
     return [freq_next, amp_next]
 
 
-def find_top(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, prev_entrained):
+def find_top(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, prev_entrained, freq_interval, amp_interval):
   
     if trial_entrained:
 
         if stim_freq == list(bottom_boundary)[len(bottom_boundary)]:
             top_boundary[stim_freq] = stim_amp
             amp_next = stim_amp
-            freq_next = stim_freq-10
+            freq_next = stim_freq - freq_interval
             prev_entrained[0] = True
 
         if prev_entrained[0]:
-            amp_next = stim_amp + 0.1
+            amp_next = stim_amp + amp_interval
             freq_next = stim_freq
             prev_entrained[0] = True
             if amp_next == 6.1:
                 amp_next = stim_amp
-                freq_next = stim_freq-10
+                freq_next = stim_freq - freq_interval
                 if freq_next < list(bottom_boundary)[0]:
                     top_finished = True
         else:
             top_boundary[stim_freq] = stim_amp
             amp_next = stim_amp
-            freq_next = stim_freq-10
+            freq_next = stim_freq - freq_interval
             prev_entrained[0] = True
     else:
         if prev_entrained[0]:
-            top_boundary[stim_freq] = stim_amp - 0.1
+            top_boundary[stim_freq] = stim_amp - amp_interval
             amp_next = stim_amp
-            freq_next = stim_freq - 10
+            freq_next = stim_freq - freq_interval
             prev_entrained[0] = False
         else:
-            amp_next = stim_amp - 0.1
+            amp_next = stim_amp - amp_interval
             freq_next = stim_freq
             prev_entrained[0] = False
 
@@ -186,10 +186,10 @@ def find_top(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary
     return [freq_next, amp_next]
 
 
-def generate_next_params(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, freq_bounds_exclusive, prev_entrained, clinical_freq, bottom_finished):
+def generate_next_params(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, freq_bounds_exclusive, prev_entrained, clinical_freq, clinical_amp, freq_interval, amp_interval, bottom_finished):
     if bottom_finished:
-        [freq_next, amp_next] = find_top(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, prev_entrained)
+        [freq_next, amp_next] = find_top(stim_amp, stim_freq, trial_entrained, bottom_boundary, top_boundary, prev_entrained, freq_interval, amp_interval)
     else:
-        [freq_next, amp_next] = find_bottom(stim_amp, stim_freq, trial_entrained, bottom_boundary, freq_bounds_exclusive, prev_entrained, clinical_freq, bottom_finished) 
+        [freq_next, amp_next] = find_bottom(stim_amp, stim_freq, trial_entrained, bottom_boundary, freq_bounds_exclusive, prev_entrained, clinical_freq, clinical_amp, bottom_finished, freq_interval, amp_interval) 
 
     return [freq_next, amp_next]
