@@ -101,8 +101,7 @@ def main():
     CLINICAL_AMP = 2.0
 
 
-    df_trials = pd.DataFrame(np.NaN, np.arange(0, num_trials, 1), 
-                             ['stim_amp', 'stim_freq', 'entrained'])   
+    df_trials = pd.DataFrame(columns = ['stim_amp', 'stim_freq', 'entrained'])   
     df_trials.index.name = 'trial'
     
     session_dir_list = get_current_sessions(main_dir)
@@ -128,16 +127,12 @@ def main():
 
         [timeseries, sr] = get_ts(td_filepath, channel)        
         [stim_freq, stim_amp] = get_stim_params(stim_filepath)
-
-
-        df_trials.loc[i, 'stim_amp'] = stim_amp
-        df_trials.loc[i, 'stim_freq'] = stim_freq
          
-        entrained_arr = sgnl.compute_trial_entrainment(timeseries, sr, df_trials['stim_freq'][i])
+        entrained_arr = sgnl.compute_trial_entrainment(timeseries, sr, stim_freq)
         trial_entrained = sgnl.compute_entrainment_decision(entrained_arr)
-        df_trials.loc[i, 'entrained'] = trial_entrained
+        df_trials.append({'stim_amp' : stim_amp, 'stim_freq' : stim_freq, 'entrained' : trial_entrained}, ignore_index=True)
         
-        entrain_trial_kernel = np.NaN
+      #  entrain_trial_kernel = np.NaN
       #  [amp_next, freq_next, entrain_trial_kernel] = trl.get_next_trial_params(df_trials, max_amp, STIM_AMP_INTERVAL, STIM_FREQ_INTERVAL, stim_freq, entrain_trial_kernel)
 
         if bottom_finished & (not bottom_sorted):
